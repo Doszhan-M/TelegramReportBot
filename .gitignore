@@ -1,6 +1,6 @@
 # My temp files
 1.py
-/.idea/
+**/.idea/
 /django_venv/
 /venv/
 **/__pycache__
