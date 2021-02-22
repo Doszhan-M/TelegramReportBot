@@ -6,6 +6,6 @@ register = template.Library()
 
 # Поступил перевод
 @register.filter(name='transfer')
-def transfer(value):
-    value1 = value + 1000
+def transfer(value, arg):
+    value1 = value + arg
     return value1

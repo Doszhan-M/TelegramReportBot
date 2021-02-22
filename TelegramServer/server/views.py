@@ -1,5 +1,5 @@
 from django.views.generic import ListView
-from .models import Payment, Score
+from .models import Score
 
 
 
@@ -10,8 +10,7 @@ class GraphicList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['payments'] = Payment.objects.all()
-        context['score'] = Score.objects.all()
+        context['scores'] = Score.objects.all().order_by('date_score')
         return context
 
 
