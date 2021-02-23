@@ -40,3 +40,20 @@ class Payment(models.Model):
     class Meta:
         verbose_name = 'Платеж'
         verbose_name_plural = 'Платежи'
+
+
+
+class Lender(models.Model):
+    lender = models.IntegerField(default=0, verbose_name='ID займодателя')
+
+    class Meta:
+        verbose_name = 'Займодатель'
+        verbose_name_plural = 'Займодатели'
+
+
+class Borrower(models.Model):
+    borrower = models.IntegerField(default=0, verbose_name='ID заемщика')
+
+    class Meta:
+        verbose_name = 'Заемщик'
+        verbose_name_plural = 'Заемщики'

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment, Score
+from .models import Payment, Score, Lender, Borrower
 
 
 # class PaymentAdmin(admin.ModelAdmin):
@@ -12,5 +12,7 @@ from .models import Payment, Score
 
 admin.site.register(Payment)
 admin.site.register(Score)
+admin.site.register(Lender)
+admin.site.register(Borrower)
 
 
