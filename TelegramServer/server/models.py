@@ -44,7 +44,7 @@ class Payment(models.Model):
 
 
 class Lender(models.Model):
-    lender = models.IntegerField(default=0, verbose_name='ID займодателя')
+    lender_id = models.IntegerField(default=0, verbose_name='ID займодателя')
 
     class Meta:
         verbose_name = 'Займодатель'
@@ -52,7 +52,7 @@ class Lender(models.Model):
 
 
 class Borrower(models.Model):
-    borrower = models.IntegerField(default=0, verbose_name='ID заемщика')
+    borrower_id = models.IntegerField(default=0, verbose_name='ID заемщика')
 
     class Meta:
         verbose_name = 'Заемщик'
