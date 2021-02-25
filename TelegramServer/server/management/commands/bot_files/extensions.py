@@ -12,6 +12,7 @@ def start_btn(message):
     btn = types.KeyboardButton('/start')
     markup.row(btn)
     bot.send_message(message.from_user.id, 'Для продолжения введите команду /start', reply_markup=markup)
+    return
 
 
 # Добавить пользователей
@@ -70,7 +71,7 @@ def new_report(payment: int):
                          monthly_payment=last_pay.monthly_payment,
                          total_payment=last_score.total_payment + last_pay.monthly_payment,
                          )
-    print('Изменения успешно внесены в базу данных')
+    print('Изменения успешно внесены в график погашения')
 
 
 # Отчет об отправке уведомления
