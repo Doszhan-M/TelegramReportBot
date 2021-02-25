@@ -5,7 +5,7 @@ from .models import Score
 
 class GraphicList(ListView):
     model = Score
-    template_name = 'server/graphic.html'
+    template_name = 'server/report.html'
 
 
     def get_context_data(self, **kwargs):

@@ -1,110 +1,19 @@
-from .bot_files.extensions import *
-from django.core.management.base import BaseCommand, CommandError
+from .bot_files.extensions import give_me_report, welcome_text, start_btn, empty_user, make_payment, choice_sum, \
+    new_report, confirm_send_payment, yes_arrive, no_arrive, other_sum
+from .bot_files.settings import bot
+from django.core.management.base import BaseCommand
 from server.models import Payment, Score, Lender, Borrower
-import telebot
 from telebot import types
 from urllib.request import urlopen
+import telebot
 
 
 class Command(BaseCommand):
-    help = 'Запусти бота'
-
-    temp_int_data = 0
-
+    help = '7-20-2'
+    temp_int_data = 0  # сервис переменная
 
     def handle(self, *args, **options):
         print('starting telegram_bot')
-
-        # Сделать платеж
-        def make_payment(message):
-            text = f'Отправить уведомление о переводе:'
-            keyboard = types.InlineKeyboardMarkup()  # Готовим кнопки
-            key_send = types.InlineKeyboardButton(text='Сумма перевода',
-                                                  callback_data='send_money')
-            keyboard.add(key_send)  # И добавляем кнопку на экран
-            bot.send_message(message.from_user.id, text, reply_markup=keyboard)
-
-        # Выбрать сумму перевода
-        def choice_sum(message):
-            text = f'Выберите сумму:'
-            keyboard = types.InlineKeyboardMarkup()  # Готовим кнопки
-            key_50 = types.InlineKeyboardButton(text='50 000', callback_data='50')
-            key_100 = types.InlineKeyboardButton(text='100 000', callback_data='100')
-            key_200 = types.InlineKeyboardButton(text='другое', callback_data='other')
-            keyboard.add(key_50, key_100, key_200)  # И добавляем кнопку на экран
-            bot.send_message(message.from_user.id, text, reply_markup=keyboard)
-
-        # Внести изменения в график погашения
-        def new_report(payment: int):
-            # Создаем платеж в базе данных
-            Payment.objects.create(monthly_payment=payment)
-            # Находим последний платеж
-            last_pay = Payment.objects.filter().order_by('-payment_date')[0]
-            # Находим последний счет
-            last_score = Score.objects.filter().order_by('-date_score')[0]
-            # Создаем новый счет
-            Score.objects.create(total=last_score.total, leftover=last_score.leftover - last_pay.monthly_payment,
-                                 monthly_payment=last_pay.monthly_payment,
-                                 total_payment=last_score.total_payment + last_pay.monthly_payment,
-                                 )
-            print('Изменения успешно внесены в базу данных')
-
-        # Отчет об отправке уведомления
-        def confirm_send_payment(message, args: int):
-            lender_id = Lender.objects.all()[0].lender_id
-            text = f'Вам пришло уведомление о переводе средств на карту в размере {args} тг'
-            keyboard = types.InlineKeyboardMarkup()  # Готовим кнопки
-            key_yes = types.InlineKeyboardButton(text='Подтвердить', callback_data='yes_arrive')
-            key_no = types.InlineKeyboardButton(text='Отклонить', callback_data='no_arrive')
-            keyboard.add(key_yes, key_no)  # И добавляем кнопку на экран
-            bot.send_message(lender_id, text, reply_markup=keyboard)
-            bot.send_message(message.from_user.id, 'Уведомление о переводе средств успешно отправлено')
-
-        # Подтверждение о поступлении
-        def yes_arrive(message):
-            # Находим последний счет
-            last_score = Score.objects.filter().order_by('-date_score')[0]
-            last_score.payment_status = 'подтверждено'
-            last_score.save()
-            lender_id = Lender.objects.all()[0].lender_id
-            borrower_id = Borrower.objects.all()[0].borrower_id
-            bot.send_message(lender_id, 'Подтверждено', )
-            # кнопка шаблон
-            markup = types.ReplyKeyboardMarkup()
-            btn = types.KeyboardButton('/start')
-            markup.row(btn)
-            bot.send_message(borrower_id, 'Подтверждено', reply_markup=markup)
-
-
-        # Отклонить поступление
-        def no_arrive(call):
-            text = f'Вы собираетесь отклонить запрос, вы уверены?'
-            keyboard = types.InlineKeyboardMarkup()  # Готовим кнопки
-            key_yes = types.InlineKeyboardButton(text='Да, отклоняю', callback_data='go_back')
-            key_no = types.InlineKeyboardButton(text='Нет, нужно проверить', callback_data='check')
-            keyboard.add(key_yes, key_no)  # И добавляем кнопку на экран
-            bot.send_message(call.from_user.id, text, reply_markup=keyboard)
-
-
-        # Отправить свою сумму перевода
-        def other_sum(message):
-            text = 'Введите сумму перевода:'
-            bot.send_message(message.from_user.id, text)
-
-        # Принять другую сумму
-        def confirm_other_sum(message):
-            try:
-                text2 = f'Вы ввели сумму {int(message.text)}:'
-                self.temp_int_data = int(message.text)
-                keyboard1 = types.InlineKeyboardMarkup()  # Готовим кнопки
-                key_yes = types.InlineKeyboardButton(text='Подтвердить', callback_data='other_yes')
-                key_no = types.InlineKeyboardButton(text='Ввести повторно', callback_data='other_no')
-                keyboard1.add(key_yes, key_no)  # И добавляем кнопку на экран
-                bot.send_message(message.from_user.id, text2, reply_markup=keyboard1)
-            except ValueError:
-                bot.send_message(message.from_user.id, 'Вам нужно ввести целое число')
-                other_sum(message)
-                bot.register_next_step_handler(message, confirm_other_sum)
 
         # Добавить сумму займа
         def add_sum(message):
@@ -117,49 +26,49 @@ class Command(BaseCommand):
                 keyboard1.add(key_yes, key_no)  # И добавляем кнопку на экран
                 bot.send_message(message.from_user.id, text, reply_markup=keyboard1)
             except ValueError:
-                bot.send_message(message.from_user.id, 'text2',)
+                bot.send_message(message.from_user.id, 'Вам необходимо ввести целое число:', )
+                bot.register_next_step_handler(message, add_sum)
 
-
-
-        # Добавить пользователей
-        def empty_user(message):
-            text3 = f'Вам необходимо определить ваш статус:'
-            keyboard_stat = types.InlineKeyboardMarkup()  # Готовим кнопки
-            key_len = types.InlineKeyboardButton(text='Займодатель', callback_data='lender')
-            key_bor = types.InlineKeyboardButton(text='Заемщик', callback_data='borrower')
-            keyboard_stat.add(key_len, key_bor)  # И добавляем кнопку на экран
-            bot.send_message(message.from_user.id, text3, reply_markup=keyboard_stat)
-            return
-
-        # Получить график
-        def give_me_report(message, args = 0):
-            text1 = f'Чтобы получить отчет нажмите кнопку:'
-            keyboard = types.InlineKeyboardMarkup()  # Готовим кнопки
-            key_report = types.InlineKeyboardButton(text='Получить график погашения',
-                                                    callback_data='give_me_report')
-            keyboard.add(key_report)  # И добавляем кнопку на экран
-            if args == 0:
-                bot.send_message(message.from_user.id, text1, reply_markup=keyboard)
-            else:
-                bot.send_message(args, text1, reply_markup=keyboard)
-
-        @bot.message_handler(commands=['help'])
-        def help(message: telebot.types.Message):
+        #  Добавить сумму займа
+        def score(message):
+            text = f"Добрый день {message.from_user.first_name}!"
+            bot.send_message(message.from_user.id, text)
             bot.send_message(message.from_user.id, welcome_text)
+            bot.send_message(message.from_user.id, 'Для начало работы вам необходимо ввести сумму займа:')
+            bot.register_next_step_handler(message, add_sum)
+
+        # Принять другую сумму
+        def confirm_other_sum(message):
+            print(message.text)
+            try:
+                text2 = f'Вы ввели сумму {int(message.text)}:'
+                self.temp_int_data = int(message.text)
+                keyboard1 = types.InlineKeyboardMarkup()  # Готовим кнопки
+                key_yes = types.InlineKeyboardButton(text='Подтвердить', callback_data='other_yes')
+                key_no = types.InlineKeyboardButton(text='Ввести повторно', callback_data='other_no')
+                keyboard1.add(key_yes, key_no)  # И добавляем кнопку на экран
+                bot.send_message(message.from_user.id, text2, reply_markup=keyboard1)
+            except ValueError:
+                bot.send_message(message.from_user.id, 'Вам необходимо ввести целое число:')
+                bot.register_next_step_handler(message, confirm_other_sum)
+
+        # Стереть все записи с базы данных
+        @bot.message_handler(commands=['empty'])
+        def empty(message: telebot.types.Message):
+            Lender.objects.all().delete()
+            Borrower.objects.all().delete()
+            Payment.objects.all().delete()
+            Score.objects.all().delete()
+            print('База данных очищена')
 
         @bot.message_handler(commands=['start'])
         def start(message: telebot.types.Message):
-
-            lenders = Lender.objects.filter(lender_id=message.from_user.id)  # займодатель
-            print(lenders)
+            lenders = Lender.objects.filter(lender_id=message.from_user.id)        # займодатель
             borrowers = Borrower.objects.filter(borrower_id=message.from_user.id)  # заемщик
-            print(borrowers)
 
             # Проверяем, есть ли запись счетов в базе данных
             if Score.objects.count() == 0:
-                text = f"Введите сумму займа:"
-                bot.send_message(message.from_user.id, text)
-                bot.register_next_step_handler(message, add_sum)
+                score(message)
 
             # Определяем пользователя
             elif not lenders:
@@ -167,10 +76,12 @@ class Command(BaseCommand):
                 if borrowers:
                     make_payment(message)
                     give_me_report(message)
-
                 else:
-                    print('Определяем пользователя')
-                    empty_user(message)
+                    if Borrower.objects.count() == 1:
+                        bot.send_message(message.from_user.id, welcome_text)
+                        empty_user(message)
+                    else:
+                        empty_user(message)
 
             # Определяем пользователя
             elif not borrowers:
@@ -178,24 +89,27 @@ class Command(BaseCommand):
                 if lenders:
                     give_me_report(message)
                 else:
-                    print('Определяем пользователя')
-                    empty_user(message)
-
+                    if Lender.objects.count() == 1:
+                        bot.send_message(message.from_user.id, welcome_text)
+                        empty_user(message)
+                    else:
+                        empty_user(message)
 
             # Обработчики нажатия на кнопки
             @bot.callback_query_handler(func=lambda call: True)
-            def calbak_worker(call):
+            def callback_worker(call):
+                # Callback для формирования и передачи отчета
                 if call.data == 'give_me_report':
                     page = urlopen('http://127.0.0.1:8000/')
                     with open("Отчет.html", "wb") as report:
                         report.write(page.read())
                         print('save')
-                    return bot.send_document(call.from_user.id, open(r'Отчет.html', 'rb'))
+                    bot.send_document(call.from_user.id, open(r'Отчет.html', 'rb'))
+                    return
 
-
+                # Callback для перевода средств
                 elif call.data == 'send_money':
                     choice_sum(call)
-
                 elif call.data == '50':
                     new_report(50000)
                     confirm_send_payment(call, 50000)
@@ -213,41 +127,39 @@ class Command(BaseCommand):
                     bot.register_next_step_handler(message, confirm_other_sum)
                 elif call.data == 'yes_arrive':
                     yes_arrive(call)
-                    lender_id = Lender.objects.all()[0].lender_id
-                    give_me_report(call, lender_id)
+                    bot.answer_callback_query(callback_query_id=call.id, text='Подтверждено!', show_alert=True)
                 elif call.data == 'no_arrive':
                     no_arrive(call)
                 elif call.data == 'go_back':
                     bot.send_message(call.from_user.id, 'Отклонено')
                 elif call.data == 'check':
-                    bot.send_message(call.from_user.id, 'Вы можете в любой момент потвердть кнопкой выше')
+                    bot.send_message(call.from_user.id, 'Вы можете в любой момент подтвердить кнопкой выше')
 
-
-                elif call.data == 'yes':
-                    Score.objects.create(total=self.temp_int_data, leftover=self.temp_int_data,
-                                         payment_status='подтвержден', monthly_payment=0, total_payment=0, )
-                    return bot.send_message(call.from_user.id,
-                                            'Спасибо, данные были внесены в график погашения! \n\n '
-                                            'Для продолжения введите команду /start', )
-                elif call.data == 'no':
-                    start(call)
-
+                # Callback для определения статуса пользователей
                 elif call.data == 'lender':
-                    if not lenders and Lender.objects.count() == 0:
+                    if Lender.objects.count() == 0:
                         Lender.objects.create(lender_id=call.from_user.id)
                         bot.send_message(call.from_user.id, 'Спасибо, вы зарегистрированы в качестве Займодателя')
-
+                        start(call)
                     else:
                         bot.send_message(call.from_user.id, 'Займодатель ранее был зарегистрирован')
                         start(call)
-
                 elif call.data == 'borrower':
-                    if not borrowers and Borrower.objects.count() < 1:
+                    if Borrower.objects.count() == 0:
                         Borrower.objects.create(borrower_id=call.from_user.id)
                         bot.send_message(call.from_user.id, 'Спасибо, вы зарегистрированы в качестве Заемщика')
+                        start(call)
                     else:
                         bot.send_message(call.from_user.id, 'Заемщик ранее был зарегистрирован')
                         start(call)
 
+                # Callback для начальной суммы
+                elif call.data == 'yes':
+                    Score.objects.create(total=self.temp_int_data, leftover=self.temp_int_data,
+                                         payment_status='подтвержден', monthly_payment=0, total_payment=0, )
+                    bot.send_message(call.from_user.id, 'Спасибо, данные успешно внесены в график погашения!')
+                    start_btn(call)
+                elif call.data == 'no':
+                    start_btn(call)
 
         bot.polling(none_stop=True)

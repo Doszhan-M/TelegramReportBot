@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+{% load custom_filters %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>График погашения</title>
+</head>
+
+
+
+ </body>
+
+<header>
+
+    <div class="header-center">
+        <ul>
+            <h1 align="center">Отчет о движении средств&nbsp;</h1>
+        </ul>
+    </div>
+
+</header>
+
+
+<style>
+   table {
+   margin: auto;
+    width: 90%; /* Ширина таблицы */
+    background: c0c0c0; /* Цвет фона таблицы */
+    border-spacing: 1px; /* Расстояние между ячейками */
+    font: 20px Lucida Sans Typewriter;
+   }
+   td, th{
+    text-align: left; /* Выравниваем текст по центру ячейки */
+    background: ffff; /* Цвет фона ячеек */
+    padding: 7px; /* Поля вокруг текста */
+
+   }
+
+   tr:nth-child(even) {background: #C9E3FE}
+   tr:last-child td:last-child {background: #ffff00}
+
+    .gradient {
+    background: linear-gradient(to left, #33ccff 0%, #ff99cc 100%);
+    padding: 90px;
+
+   }
+
+</style>
+
+<body bgcolor="#c0c0c0" class="gradient">
+<table>
+    <tr>
+        <th><h3><span style="color: #0000ff;">Дата платежа&nbsp;</span></h3></th>
+        <th><h3><span style="color: #0000ff;">Статус&nbsp;</span></h3></th>
+        <th><h3><span style="color: #0000ff;">Перевод&nbsp;</span></h3></th>
+        <th><h3><span style="color: #0000ff;">Сумма переводов&nbsp;</span></h3></th>
+        <th><h3><span style="color: #ff6600;">Остаток&nbsp;</span></h3></th>
+    </tr>
+    {% for score in scores %}
+    <tr>
+        <td>{{ score.date_score }}</td>
+        <td>{{ score.payment_status }}</td>
+        <td>{{ score.monthly_payment }}</td>
+        <td>{{ score.total_payment }}</td>
+        <td>{{ score.leftover }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+

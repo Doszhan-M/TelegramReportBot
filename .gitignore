@@ -4,6 +4,7 @@
 /django_venv/
 /venv/
 **/__pycache__
+./Отчет.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

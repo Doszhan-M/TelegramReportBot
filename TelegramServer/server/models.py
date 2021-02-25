@@ -21,8 +21,8 @@ class Score(models.Model):
         return f'Счет {self.id}'
 
     class Meta:
-        verbose_name = 'График'
-        verbose_name_plural = 'Графики'
+        verbose_name = 'Счет'
+        verbose_name_plural = 'Счета'
 
 
 class Payment(models.Model):
