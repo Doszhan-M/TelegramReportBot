@@ -39,7 +39,6 @@ class Command(BaseCommand):
 
         # Принять другую сумму
         def confirm_other_sum(message):
-            print(message.text)
             try:
                 text2 = f'Вы ввели сумму {int(message.text)}:'
                 self.temp_int_data = int(message.text)
@@ -103,7 +102,7 @@ class Command(BaseCommand):
                     page = urlopen('http://127.0.0.1:8000/')
                     with open("Отчет.html", "wb") as report:
                         report.write(page.read())
-                        print('save')
+                        print('Отчет успешно отправлен')
                     bot.send_document(call.from_user.id, open(r'Отчет.html', 'rb'))
                     return
 
@@ -117,7 +116,7 @@ class Command(BaseCommand):
                     new_report(100000)
                     confirm_send_payment(call, 100000)
                 elif call.data == 'other':
-                    other_sum(call)
+                    bot.send_message(call.from_user.id, 'Введите сумму перевода:')
                     bot.register_next_step_handler(message, confirm_other_sum)
                 elif call.data == 'other_yes':
                     new_report(self.temp_int_data)
