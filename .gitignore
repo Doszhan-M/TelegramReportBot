@@ -4,7 +4,9 @@
 /django_venv/
 /venv/
 **/__pycache__
+**/migrations
 ./Отчет.html
+./db.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
