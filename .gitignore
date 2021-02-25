@@ -5,8 +5,8 @@
 /venv/
 **/__pycache__
 **/migrations
-./Отчет.html
-./db.sqlite3
+TelegramServer/Отчет.html
+TelegramServer/db.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
