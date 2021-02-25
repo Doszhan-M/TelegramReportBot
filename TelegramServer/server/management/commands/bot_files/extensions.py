@@ -7,7 +7,3 @@ welcome_text = f" sfsefsef\n\n"
 # text1 = f"Добрый день {message.chat.username}.\nВыберите, что необходимо сделать: \n\n"
 
 
-a = []
-
-for b in a:
-    print(b)

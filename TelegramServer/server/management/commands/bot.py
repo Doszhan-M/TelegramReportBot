@@ -69,12 +69,22 @@ class Command(BaseCommand):
             lender_id = Lender.objects.all()[0].lender_id
             borrower_id = Borrower.objects.all()[0].borrower_id
             bot.send_message(lender_id, 'Подтверждено', )
-            bot.send_message(borrower_id, 'Подтверждено')
+            # кнопка шаблон
+            markup = types.ReplyKeyboardMarkup()
+            btn = types.KeyboardButton('/start')
+            markup.row(btn)
+            bot.send_message(borrower_id, 'Подтверждено', reply_markup=markup)
 
 
         # Отклонить поступление
-        def no_arrive():
-            pass
+        def no_arrive(call):
+            text = f'Вы собираетесь отклонить запрос, вы уверены?'
+            keyboard = types.InlineKeyboardMarkup()  # Готовим кнопки
+            key_yes = types.InlineKeyboardButton(text='Да, отклоняю', callback_data='go_back')
+            key_no = types.InlineKeyboardButton(text='Нет, нужно проверить', callback_data='check')
+            keyboard.add(key_yes, key_no)  # И добавляем кнопку на экран
+            bot.send_message(call.from_user.id, text, reply_markup=keyboard)
+
 
         # Отправить свою сумму перевода
         def other_sum(message):
@@ -83,25 +93,33 @@ class Command(BaseCommand):
 
         # Принять другую сумму
         def confirm_other_sum(message):
-            if type(int(message.text)) == int:
-                text2 = f'Вы ввели сумму {int(message.text)}. Если это верно, то подтвердите:'
+            try:
+                text2 = f'Вы ввели сумму {int(message.text)}:'
                 self.temp_int_data = int(message.text)
                 keyboard1 = types.InlineKeyboardMarkup()  # Готовим кнопки
                 key_yes = types.InlineKeyboardButton(text='Подтвердить', callback_data='other_yes')
                 key_no = types.InlineKeyboardButton(text='Ввести повторно', callback_data='other_no')
                 keyboard1.add(key_yes, key_no)  # И добавляем кнопку на экран
                 bot.send_message(message.from_user.id, text2, reply_markup=keyboard1)
+            except ValueError:
+                bot.send_message(message.from_user.id, 'Вам нужно ввести целое число')
+                other_sum(message)
+                bot.register_next_step_handler(message, confirm_other_sum)
 
         # Добавить сумму займа
         def add_sum(message):
-            if type(int(message.text)) == int:
-                text2 = f'Вы ввели сумму {int(message.text)}. Если это верно, то подтвердите:'
+            try:
+                text = f'Вы ввели сумму {int(message.text)}. Если это верно, то подтвердите:'
                 self.temp_int_data = int(message.text)
                 keyboard1 = types.InlineKeyboardMarkup()  # Готовим кнопки
                 key_yes = types.InlineKeyboardButton(text='Подтвердить', callback_data='yes')
                 key_no = types.InlineKeyboardButton(text='Ввести повторно', callback_data='no')
                 keyboard1.add(key_yes, key_no)  # И добавляем кнопку на экран
-                bot.send_message(message.from_user.id, text2, reply_markup=keyboard1)
+                bot.send_message(message.from_user.id, text, reply_markup=keyboard1)
+            except ValueError:
+                bot.send_message(message.from_user.id, 'text2',)
+
+
 
         # Добавить пользователей
         def empty_user(message):
@@ -140,7 +158,7 @@ class Command(BaseCommand):
             # Проверяем, есть ли запись счетов в базе данных
             if Score.objects.count() == 0:
                 text = f"Введите сумму займа:"
-                bot.send_message(message.chat.id, text)
+                bot.send_message(message.from_user.id, text)
                 bot.register_next_step_handler(message, add_sum)
 
             # Определяем пользователя
@@ -185,22 +203,25 @@ class Command(BaseCommand):
                     new_report(100000)
                     confirm_send_payment(call, 100000)
                 elif call.data == 'other':
-                    other_sum(message)
-                    bot.register_next_step_handler(call, confirm_other_sum)
+                    other_sum(call)
+                    bot.register_next_step_handler(message, confirm_other_sum)
                 elif call.data == 'other_yes':
                     new_report(self.temp_int_data)
                     confirm_send_payment(call, self.temp_int_data)
                 elif call.data == 'other_no':
                     other_sum(call)
-                    bot.register_next_step_handler(call, confirm_other_sum)
+                    bot.register_next_step_handler(message, confirm_other_sum)
                 elif call.data == 'yes_arrive':
                     yes_arrive(call)
                     lender_id = Lender.objects.all()[0].lender_id
                     give_me_report(call, lender_id)
-
-
                 elif call.data == 'no_arrive':
-                    no_arrive()
+                    no_arrive(call)
+                elif call.data == 'go_back':
+                    bot.send_message(call.from_user.id, 'Отклонено')
+                elif call.data == 'check':
+                    bot.send_message(call.from_user.id, 'Вы можете в любой момент потвердть кнопкой выше')
+
 
                 elif call.data == 'yes':
                     Score.objects.create(total=self.temp_int_data, leftover=self.temp_int_data,
