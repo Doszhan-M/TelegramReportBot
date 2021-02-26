@@ -1,4 +1,4 @@
-запускаем сервер python manage.py runserver
+запускаем сервер - python manage.py runserver
 
-запускаем бота   python manage.py bot
+запускаем бот   -  python manage.py bot
 
