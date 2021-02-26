@@ -46,6 +46,10 @@ class Payment(models.Model):
 class Lender(models.Model):
     lender_id = models.IntegerField(default=0, verbose_name='ID займодателя')
 
+    # Строковое отабражение поста
+    def __str__(self):
+        return f'Займодатель {self.id}'
+
     class Meta:
         verbose_name = 'Займодатель'
         verbose_name_plural = 'Займодатели'
@@ -53,6 +57,10 @@ class Lender(models.Model):
 
 class Borrower(models.Model):
     borrower_id = models.IntegerField(default=0, verbose_name='ID заемщика')
+
+    # Строковое отабражение поста
+    def __str__(self):
+        return f'Заемщик {self.id}'
 
     class Meta:
         verbose_name = 'Заемщик'
