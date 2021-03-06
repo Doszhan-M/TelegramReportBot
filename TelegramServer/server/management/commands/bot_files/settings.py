@@ -1,5 +1,8 @@
 import telebot
+import os
+from TelegramServer.settings import BASE_DIR
 
-TOKEN = "1593606147:AAER3uF_VxkrFEa2rhL7rA5BjIv2rL7ovOc"
+with open(os.path.join(BASE_DIR, 'token.txt'), 'r') as token:
+    TOKEN = token.read()
 
 bot = telebot.TeleBot(TOKEN)

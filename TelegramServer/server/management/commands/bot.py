@@ -6,10 +6,12 @@ from server.models import Payment, Score, Lender, Borrower
 from telebot import types
 from urllib.request import urlopen
 import telebot
+import os, time
+from TelegramServer.settings import BASE_DIR
 
 
 class Command(BaseCommand):
-    help = '7-20-2'
+    help = '7-20-25'
     temp_int_data = 0  # сервис переменная
 
     def handle(self, *args, **options):
@@ -62,7 +64,7 @@ class Command(BaseCommand):
 
         @bot.message_handler(commands=['start'])
         def start(message: telebot.types.Message):
-            lenders = Lender.objects.filter(lender_id=message.from_user.id)        # займодатель
+            lenders = Lender.objects.filter(lender_id=message.from_user.id)  # займодатель
             borrowers = Borrower.objects.filter(borrower_id=message.from_user.id)  # заемщик
 
             # Проверяем, есть ли запись счетов в базе данных
@@ -99,7 +101,16 @@ class Command(BaseCommand):
             def callback_worker(call):
                 # Callback для формирования и передачи отчета
                 if call.data == 'give_me_report':
-                    page = urlopen('http://127.0.0.1:8000/')
+                    os.chdir(BASE_DIR)
+                    os.startfile("bot_runserver.vbs")  # vbs скрип запустить сервер джанго, для формирования отчета
+                    time.sleep(2)
+                    try:
+                        page = urlopen('http://127.0.0.1:8000/')
+                        print('success')
+                    except Exception:
+                        time.sleep(2)
+                        page = urlopen('http://127.0.0.1:8000/')
+                        print('pass')
                     with open("Отчет.html", "wb") as report:
                         report.write(page.read())
                         print('Отчет успешно отправлен')
@@ -161,4 +172,9 @@ class Command(BaseCommand):
                 elif call.data == 'no':
                     start_btn(call)
 
-        bot.polling(none_stop=True)
+        try:
+            bot.polling(none_stop=True)
+        except Exception:
+            os.chdir(BASE_DIR)
+            # если бот упал по крайне неопределенным обстоятельствам, перезапускаем
+            os.startfile("start_bot.vbs")
