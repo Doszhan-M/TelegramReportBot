@@ -1,5 +1,6 @@
 # Loan Report Bot
 ![picture](https://miro.medium.com/max/500/0*iSKHWwuzsr0roZCy.png)
+
 Для настройки телеграм бота, неодходимо создать файл token.txt и записать в него токен бота. Файл должен находиться в
 той же директории что и manage.py
 

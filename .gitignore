@@ -1,5 +1,6 @@
 # My temp files
 Token.txt
+**/db/
 **/.idea/
 **/venv/
 **/__pycache__
