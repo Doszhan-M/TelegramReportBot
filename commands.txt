@@ -9,4 +9,4 @@ python manage.py runserver
 
 python manage.py bot
 
-python manage.py dumpdata --format=json > server > server.json
+python manage.py dumpdata --format=json > server > db/server.json

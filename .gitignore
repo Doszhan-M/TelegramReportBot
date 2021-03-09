@@ -1,10 +1,8 @@
 # My temp files
 Token.txt
 **/.idea/
-/django_venv/
-/venv/
+**/venv/
 **/__pycache__
-**/migrations
 TelegramServer/Отчет.html
 TelegramServer/db.sqlite3
 
