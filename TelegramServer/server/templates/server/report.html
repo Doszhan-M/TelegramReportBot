@@ -58,7 +58,7 @@
     </tr>
     {% for score in scores %}
     <tr>
-        <td>{{ score.date_score }}</td>
+        <td>{{ score.date_score|date:"j F Y" }} г.</td>
         <td>{{ score.payment_status }}</td>
         <td>{{ score.monthly_payment }}</td>
         <td>{{ score.total_payment }}</td>

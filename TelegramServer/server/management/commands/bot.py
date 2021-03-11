@@ -1,5 +1,5 @@
 from .bot_files.extensions import give_me_report, welcome_text, start_btn, empty_user, make_payment, choice_sum, \
-    new_report, confirm_send_payment, yes_arrive, no_arrive, other_sum
+    new_report, confirm_send_payment, yes_arrive, no_arrive, other_sum, logger
 from .bot_files.settings import bot
 from django.core.management.base import BaseCommand
 from server.models import Payment, Score, Lender, Borrower
@@ -8,6 +8,7 @@ from urllib.request import urlopen
 import telebot
 import os, time
 from TelegramServer.settings import BASE_DIR
+import logging
 
 
 class Command(BaseCommand):
@@ -15,7 +16,8 @@ class Command(BaseCommand):
     temp_int_data = 0  # сервис переменная
 
     def handle(self, *args, **options):
-        print('starting telegram_bot')
+        logger()  # Инициализация логгера
+        logging.info('Star telegram bot')
 
         # Добавить сумму займа
         def add_sum(message):
@@ -53,15 +55,17 @@ class Command(BaseCommand):
                 bot.send_message(message.from_user.id, 'Вам необходимо ввести целое число:')
                 bot.register_next_step_handler(message, confirm_other_sum)
 
-        # Стереть все записи с базы данных
-        @bot.message_handler(commands=['empty'])
+        # На время отладки, для старта с нуля
+        @bot.message_handler(commands=['erase_all_data'])
         def empty(message: telebot.types.Message):
+            """Стереть все записи с базы данных"""
             Lender.objects.all().delete()
             Borrower.objects.all().delete()
             Payment.objects.all().delete()
             Score.objects.all().delete()
-            print('База данных очищена')
+            logging.info('База данных очищена')
 
+        # Основной алгоритм бота
         @bot.message_handler(commands=['start'])
         def start(message: telebot.types.Message):
             lenders = Lender.objects.filter(lender_id=message.from_user.id)  # займодатель
@@ -70,13 +74,13 @@ class Command(BaseCommand):
             # Проверяем, есть ли запись счетов в базе данных
             if Score.objects.count() == 0:
                 score(message)
-
             # Определяем пользователя
             elif not lenders:
                 # Если это бороуер то выполняет работу
                 if borrowers:
                     make_payment(message)
                     give_me_report(message)
+                    logging.info(f'Активность заемщика')
                 else:
                     if Borrower.objects.count() == 1:
                         bot.send_message(message.from_user.id, welcome_text)
@@ -89,6 +93,7 @@ class Command(BaseCommand):
                 # Если это лендер то выполняет работу
                 if lenders:
                     give_me_report(message)
+                    logging.info(f'Активность займодателя')
                 else:
                     if Lender.objects.count() == 1:
                         bot.send_message(message.from_user.id, welcome_text)
@@ -103,17 +108,16 @@ class Command(BaseCommand):
                 if call.data == 'give_me_report':
                     os.chdir(BASE_DIR)
                     os.startfile("bot_runserver.vbs")  # vbs скрип запустить сервер джанго, для формирования отчета
-                    time.sleep(2)
+                    time.sleep(3)
                     try:
                         page = urlopen('http://127.0.0.1:8000/')
-                        print('success')
-                    except Exception:
+                    except Exception: # Грубо, но так надо
                         time.sleep(2)
                         page = urlopen('http://127.0.0.1:8000/')
-                        print('pass')
+                        logging.info(f'Времени для старта сервера не хватило')
                     with open("Отчет.html", "wb") as report:
                         report.write(page.read())
-                        print('Отчет успешно отправлен')
+                        logging.info(f'Отчет успешно отправлен {call.from_user.id}')
                     bot.send_document(call.from_user.id, open(r'Отчет.html', 'rb'))
                     return
 
@@ -138,10 +142,12 @@ class Command(BaseCommand):
                 elif call.data == 'yes_arrive':
                     yes_arrive(call)
                     bot.answer_callback_query(callback_query_id=call.id, text='Подтверждено!', show_alert=True)
+                    logging.info(f'Подтверждено займодетелем')
                 elif call.data == 'no_arrive':
                     no_arrive(call)
                 elif call.data == 'go_back':
                     bot.send_message(call.from_user.id, 'Отклонено')
+                    logging.info(f'Отклонено займодетелем')
                 elif call.data == 'check':
                     bot.send_message(call.from_user.id, 'Вы можете в любой момент подтвердить кнопкой выше')
 
@@ -151,6 +157,7 @@ class Command(BaseCommand):
                         Lender.objects.create(lender_id=call.from_user.id)
                         bot.send_message(call.from_user.id, 'Спасибо, вы зарегистрированы в качестве Займодателя')
                         start(call)
+                        logging.info('Займодатель зарегистрирован')
                     else:
                         bot.send_message(call.from_user.id, 'Займодатель ранее был зарегистрирован')
                         start(call)
@@ -159,6 +166,7 @@ class Command(BaseCommand):
                         Borrower.objects.create(borrower_id=call.from_user.id)
                         bot.send_message(call.from_user.id, 'Спасибо, вы зарегистрированы в качестве Заемщика')
                         start(call)
+                        logging.info('Заемщик зарегистрирован')
                     else:
                         bot.send_message(call.from_user.id, 'Заемщик ранее был зарегистрирован')
                         start(call)
@@ -169,12 +177,13 @@ class Command(BaseCommand):
                                          payment_status='подтвержден', monthly_payment=0, total_payment=0, )
                     bot.send_message(call.from_user.id, 'Спасибо, данные успешно внесены в график погашения!')
                     start_btn(call)
+                    logging.info(f'Начальная сумма определена')
                 elif call.data == 'no':
                     start_btn(call)
 
         try:
             bot.polling(none_stop=True)
-        except Exception:
+        except Exception:  # если бот упал по крайне неопределенным обстоятельствам, перезапускаем
             os.chdir(BASE_DIR)
-            # если бот упал по крайне неопределенным обстоятельствам, перезапускаем
             os.startfile("start_bot.vbs")
+            logging.exception("Exception occurred")

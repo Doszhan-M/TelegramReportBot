@@ -5,7 +5,7 @@ Token.txt
 **/venv/
 **/__pycache__
 TelegramServer/Отчет.html
-TelegramServer/db.sqlite3
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

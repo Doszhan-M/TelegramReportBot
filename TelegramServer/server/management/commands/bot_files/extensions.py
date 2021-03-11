@@ -1,6 +1,9 @@
 from .settings import bot
 from telebot import types
 from server.models import Payment, Score, Lender, Borrower
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
 
 welcome_text = f" Вас приветствует бот 7-20-25! Данный бот будет вести учет о погашении " \
                f"займа. В любой момент вы сможете запросить отчет о движении средств."
@@ -71,7 +74,7 @@ def new_report(payment: int):
                          monthly_payment=last_pay.monthly_payment,
                          total_payment=last_score.total_payment + last_pay.monthly_payment,
                          )
-    print('Изменения успешно внесены в график погашения')
+    logging.info('Изменения успешно внесены в график погашения')
 
 
 # Отчет об отправке уведомления
@@ -84,13 +87,14 @@ def confirm_send_payment(message, args: int):
     keyboard.add(key_yes, key_no)  # И добавляем кнопку на экран
     bot.send_message(lender_id, text, reply_markup=keyboard)
     bot.send_message(message.from_user.id, 'Уведомление о переводе средств успешно отправлено')
+    logging.info(f'Уведомление о переводе средств успешно отправлено')
 
 
 # Подтверждение о поступлении
 def yes_arrive(message):
     # Находим последний счет
     last_score = Score.objects.filter().order_by('-date_score')[0]
-    last_score.payment_status = 'подтверждено'
+    last_score.payment_status = 'подтвержден'
     last_score.save()
     lender_id = Lender.objects.all()[0].lender_id
     borrower_id = Borrower.objects.all()[0].borrower_id
@@ -113,3 +117,24 @@ def no_arrive(call):
 def other_sum(message):
     text = 'Введите сумму перевода:'
     bot.send_message(message.from_user.id, text)
+
+
+def logger():
+    """Настройки логгера"""
+    # Console log settings
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console_format = logging.Formatter(
+        '%(asctime)s - %(message)s - %(levelname)s', datefmt='%H:%M:%S', )
+    console.setFormatter(console_format)
+    logging.getLogger('').addHandler(console)
+
+    # File log settings
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger = TimedRotatingFileHandler(
+        "logger/logger.log", when='W0', interval=1, backupCount=5, )
+    file_format = logging.Formatter(
+        '%(asctime)s - %(message)s - %(levelname)s', datefmt='%d-%b-%Y %H:%M:%S', )
+    logger.setFormatter(file_format)
+    logging.getLogger('').addHandler(logger)

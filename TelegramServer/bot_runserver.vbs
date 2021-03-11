@@ -1,6 +1,6 @@
 set sh=CreateObject("Wscript.Shell")
 sh.Run "python manage.py runserver", 0
-WScript.Sleep 60000
+WScript.Sleep 120000
 
 set WshShell = WScript.CreateObject("WScript.Shell")
 WshShell.Run "taskkill /IM python.exe", 0
