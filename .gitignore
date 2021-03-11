@@ -5,6 +5,7 @@ Token.txt
 **/venv/
 **/__pycache__
 TelegramServer/Отчет.html
+logger/logger.log
 
 
 # Byte-compiled / optimized / DLL files
